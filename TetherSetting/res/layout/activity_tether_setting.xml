@@ -1,0 +1,28 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <Preference
+        android:layout="@layout/admob_preference"
+        android:selectable="false" />
+
+    <CheckBoxPreference
+        android:key="enable_wifi_ap"
+        android:summary="@string/wifi_tether_checkbox_text"
+        android:title="@string/title_check_tether" />
+
+    <EditTextPreference
+        android:defaultValue="@string/wifi_tether_configure_ssid_default"
+        android:dialogTitle="@string/title_input_ssid"
+        android:key="wifi_ap_ssid"
+        android:summary="edittext_summary"
+        android:title="SSID" />
+
+    <EditTextPreference
+        android:defaultValue="defaultpass"
+        android:dialogTitle="@string/title_input_password"
+        android:key="wifi_ap_security"
+        android:summary="edittext_summary"
+        android:title="password" />
+
+</PreferenceScreen>

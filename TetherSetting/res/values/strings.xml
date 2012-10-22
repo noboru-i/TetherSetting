@@ -1,0 +1,15 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_name">TetherSetting</string>
+    <string name="title_activity_tether_setting">TetherSetting</string>
+    <string name="title_check_tether">Wi-Fi tether</string>
+    <string name="title_input_ssid">SSID</string>
+    <string name="title_input_password">password</string>
+    <string name="wifi_error">Error</string>
+    <string name="wifi_tether_configure_ssid_default">AndroidHotspot</string>
+    <string name="wifi_tether_checkbox_text">Portable Wi-Fi hotspot</string>
+    <string name="wifi_tether_enabled_subtext">Portable hotspot <xliff:g id="network_ssid">%1$s</xliff:g> active</string>
+    
+    <string name="toast_validation_error_password">Input empty or 8–63 characters.</string>
+
+</resources>
