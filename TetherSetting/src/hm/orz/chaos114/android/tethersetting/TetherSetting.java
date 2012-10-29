@@ -14,6 +14,8 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
+import com.bugsense.trace.BugSenseHandler;
+
 public class TetherSetting extends PreferenceActivity implements
 		Preference.OnPreferenceChangeListener {
 
@@ -29,6 +31,8 @@ public class TetherSetting extends PreferenceActivity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		BugSenseHandler.initAndStartSession(getApplication(),
+				getString(R.string.bug_sense_api_key));
 		addPreferencesFromResource(R.layout.activity_tether_setting);
 
 		CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
