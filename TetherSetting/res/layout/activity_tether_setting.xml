@@ -25,4 +25,12 @@
         android:summary="edittext_summary"
         android:title="password" />
 
+    <ListPreference
+        android:defaultValue="2"
+        android:entries="@array/listNotificationSettingNames"
+        android:entryValues="@array/listNotificationSettingValues"
+        android:key="notification_setting"
+        android:summary="@string/summary_notification_setting"
+        android:title="@string/title_notification_setting" />
+
 </PreferenceScreen>

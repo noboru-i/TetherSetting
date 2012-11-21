@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.widget.Toast;
@@ -22,10 +23,13 @@ public class TetherSetting extends PreferenceActivity implements
 	public static final String WIFI_AP_SSID = "wifi_ap_ssid";
 	public static final String WIFI_AP_SECURITY = "wifi_ap_security";
 	public static final String ENABLE_WIFI_AP = "enable_wifi_ap";
+	
+	public static final String NOTIFICATION_SETTING = "notification_setting";
 
 	private WifiApEnabler mWifiApEnabler;
 	private EditTextPreference mSsid;
 	private EditTextPreference mSecurity;
+	private ListPreference mNotificationSetting;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -38,10 +42,12 @@ public class TetherSetting extends PreferenceActivity implements
 		CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
 		mSsid = (EditTextPreference) findPreference(WIFI_AP_SSID);
 		mSecurity = (EditTextPreference) findPreference(WIFI_AP_SECURITY);
+		mNotificationSetting = (ListPreference) findPreference(NOTIFICATION_SETTING);
 		mWifiApEnabler = new WifiApEnabler(this, mEnableWifiAp);
 
 		mSsid.setOnPreferenceChangeListener(this);
 		mSecurity.setOnPreferenceChangeListener(this);
+		mNotificationSetting.setOnPreferenceChangeListener(this);
 		setSummary();
 	}
 
@@ -89,6 +95,9 @@ public class TetherSetting extends PreferenceActivity implements
 				return false;
 			}
 			prefix = "password:";
+		} else if (NOTIFICATION_SETTING.equals(preference.getKey())) {
+			mWifiApEnabler.setNotification((String)newValue);
+			return true;
 		}
 		preference.setSummary(prefix + value);
 		return true;

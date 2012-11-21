@@ -1,5 +1,6 @@
 package hm.orz.chaos114.android.tethersetting;
 
+import hm.orz.chaos114.android.tethersetting.util.NotificationUtil;
 import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
 
 import java.lang.reflect.Field;
@@ -17,10 +18,13 @@ import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiManager;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
+import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.util.Log;
 
 public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
+	private static final String TAG = WifiApEnabler.class.getSimpleName();
+
 	private final Context mContext;
 	private final CheckBoxPreference mCheckBox;
 	private final CharSequence mOriginalSummary;
@@ -277,5 +281,35 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 			mCheckBox.setChecked(false);
 			enableWifiCheckBox();
 		}
+		setNotification();
+	}
+
+	public void setNotification(String notificationSetting) {
+		boolean showNotification = false;
+		Log.d(TAG, "notificationSetting = " + notificationSetting);
+		if ("1".equals(notificationSetting)) {
+			showNotification = true;
+		} else if ("2".equals(notificationSetting)) {
+			CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) ((PreferenceActivity) mContext)
+					.findPreference(TetherSetting.ENABLE_WIFI_AP);
+			if (mEnableWifiAp.isEnabled() && mEnableWifiAp.isChecked()) {
+				showNotification = true;
+			}
+		}
+
+		if (showNotification) {
+			NotificationUtil.notify(mContext,
+					mContext.getString(R.string.app_name),
+					mContext.getString(R.string.notification_message));
+		} else {
+			NotificationUtil.cancel(mContext);
+		}
+	}
+
+	public void setNotification() {
+		PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
+		String notificationSetting = preferenceUtil
+				.getString(TetherSetting.NOTIFICATION_SETTING);
+		setNotification(notificationSetting);
 	}
 }

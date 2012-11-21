@@ -5,10 +5,15 @@
     <string name="title_check_tether">Wi-Fiテザリング</string>
     <string name="title_input_ssid">SSID</string>
     <string name="title_input_password">password</string>
+    <string name="title_notification_setting">通知設定</string>
+    <string name="summary_notification_setting">通知領域に表示するタイミングを設定</string>
+    <string name="notification_message">タップして設定する</string>
+    
     <string name="wifi_error">エラー</string>
     <string name="wifi_tether_configure_ssid_default">AndroidHotspot</string>
     <string name="wifi_tether_checkbox_text">ポータブルWi-Fiアクセスポイント</string>
     <string name="wifi_tether_enabled_subtext">"ポータブルアクセスポイント<xliff:g id="NETWORK_SSID">%1$s</xliff:g>が有効です"</string>
+    
     <string name="toast_validation_error_password">パスワードは空、もしくは8〜63文字を入力してください。</string>
 
 </resources>
