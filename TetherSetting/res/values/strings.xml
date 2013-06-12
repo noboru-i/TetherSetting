@@ -16,4 +16,5 @@
     
     <string name="toast_validation_error_password">Input empty or 8–63 characters.</string>
 
+    <string name="dialog_progressing">Progressing.</string>
 </resources>

@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,16 +30,18 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 	private final CheckBoxPreference mCheckBox;
 	private final CharSequence mOriginalSummary;
 
-	private WifiManager mWifiManager;
+	private final WifiManager mWifiManager;
 	private final IntentFilter mIntentFilter;
 
 	ConnectivityManager mCm;
-	private String[] mWifiRegexs;
+	private final String[] mWifiRegexs;
+
+	private final ProgressDialog mDialog;
 
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
+		public void onReceive(final Context context, final Intent intent) {
+			final String action = intent.getAction();
 			if (getStringField(WifiManager.class,
 					"WIFI_AP_STATE_CHANGED_ACTION").equals(action)) {
 				handleWifiApStateChanged(intent
@@ -49,15 +52,15 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 										"WIFI_AP_STATE_FAILED")));
 			} else if (getStringField(ConnectivityManager.class,
 					"ACTION_TETHER_STATE_CHANGED").equals(action)) {
-				ArrayList<String> available = intent
+				final ArrayList<String> available = intent
 						.getStringArrayListExtra(getStringField(
 								ConnectivityManager.class,
 								"EXTRA_AVAILABLE_TETHER"));
-				ArrayList<String> active = intent
+				final ArrayList<String> active = intent
 						.getStringArrayListExtra(getStringField(
 								ConnectivityManager.class,
 								"EXTRA_ACTIVE_TETHER"));
-				ArrayList<String> errored = intent
+				final ArrayList<String> errored = intent
 						.getStringArrayListExtra(getStringField(
 								ConnectivityManager.class,
 								"EXTRA_ERRORED_TETHER"));
@@ -68,7 +71,7 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 		}
 	};
 
-	public WifiApEnabler(Context context, CheckBoxPreference checkBox) {
+	public WifiApEnabler(final Context context, final CheckBoxPreference checkBox) {
 		mContext = context;
 		mCheckBox = checkBox;
 		mOriginalSummary = checkBox.getSummary();
@@ -85,31 +88,32 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 				"WIFI_AP_STATE_CHANGED_ACTION"));
 		mIntentFilter.addAction(getStringField(ConnectivityManager.class,
 				"ACTION_TETHER_STATE_CHANGED"));
+		mDialog = new ProgressDialog(mContext);
 	}
 
-	private String getStringField(Class<? extends Object> c, String name) {
+	private String getStringField(final Class<? extends Object> c, final String name) {
 		return (String) getObjectField(c, name);
 	}
 
-	private int getIntField(Class<? extends Object> c, String name) {
+	private int getIntField(final Class<? extends Object> c, final String name) {
 		return (Integer) getObjectField(c, name);
 	}
 
-	private Object getObjectField(Class<? extends Object> c, String name) {
+	private Object getObjectField(final Class<? extends Object> c, final String name) {
 		try {
-			Field f = c.getField(name);
+			final Field f = c.getField(name);
 			return f.get(null);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(c.getSimpleName() + " : " + name, e);
 		}
 	}
 
-	private String[] getTetherableWifiRegexs(ConnectivityManager manager) {
+	private String[] getTetherableWifiRegexs(final ConnectivityManager manager) {
 		try {
-			Method method = manager.getClass().getMethod(
+			final Method method = manager.getClass().getMethod(
 					"getTetherableWifiRegexs", (Class[]) null);
 			return (String[]) method.invoke(manager);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -126,7 +130,7 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 	}
 
 	private void enableWifiCheckBox() {
-		boolean isAirplaneMode = Settings.System.getInt(
+		final boolean isAirplaneMode = Settings.System.getInt(
 				mContext.getContentResolver(),
 				Settings.System.AIRPLANE_MODE_ON, 0) != 0;
 		if (!isAirplaneMode) {
@@ -137,15 +141,15 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 	}
 
 	@Override
-	public boolean onPreferenceChange(Preference preference, Object value) {
-		boolean enable = (Boolean) value;
+	public boolean onPreferenceChange(final Preference preference, final Object value) {
+		final boolean enable = (Boolean) value;
 
-		PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
+		final PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
 
 		/**
 		 * Disable Wifi if enabling tethering
 		 */
-		int wifiState = mWifiManager.getWifiState();
+		final int wifiState = mWifiManager.getWifiState();
 		if (enable
 				&& ((wifiState == WifiManager.WIFI_STATE_ENABLING) || (wifiState == WifiManager.WIFI_STATE_ENABLED))) {
 			mWifiManager.setWifiEnabled(false);
@@ -154,7 +158,8 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 
 		if (setWifiApEnabled(mWifiManager, getWifiConfiguration(), enable)) {
 			/* Disable here, enabled on receiving success broadcast */
-			mCheckBox.setEnabled(false);
+			// mCheckBox.setEnabled(false);
+			showDialog();
 		} else {
 			mCheckBox.setSummary(R.string.wifi_error);
 		}
@@ -163,7 +168,7 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 		 * If needed, restore Wifi on tether disable
 		 */
 		if (!enable) {
-			int wifiSavedState = preferenceUtil.getInt("wifi_saved_state");
+			final int wifiSavedState = preferenceUtil.getInt("wifi_saved_state");
 			if (wifiSavedState == 1) {
 				mWifiManager.setWifiEnabled(true);
 				preferenceUtil.putInt("wifi_saved_state", 0);
@@ -174,13 +179,13 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 	}
 
 	private WifiConfiguration getWifiConfiguration() {
-		PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
-		String ssid = preferenceUtil.getString(TetherSetting.WIFI_AP_SSID);
-		String security = preferenceUtil
+		final PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
+		final String ssid = preferenceUtil.getString(TetherSetting.WIFI_AP_SSID);
+		final String security = preferenceUtil
 				.getString(TetherSetting.WIFI_AP_SECURITY);
-		Log.d("test", "ssid = " + ssid + ", security = " + security);
+		Log.d(TAG, "ssid = " + ssid + ", security = " + security);
 
-		WifiConfiguration configuration = new WifiConfiguration();
+		final WifiConfiguration configuration = new WifiConfiguration();
 		configuration.SSID = ssid;
 		if (security == null || security.length() == 0) {
 			// passwordが設定されていない
@@ -194,69 +199,74 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 		return configuration;
 	}
 
-	void updateConfigSummary(WifiConfiguration wifiConfig) {
-		String s = mContext
+	void updateConfigSummary(final WifiConfiguration wifiConfig) {
+		final String s = mContext
 				.getString(R.string.wifi_tether_configure_ssid_default);
 		mCheckBox.setSummary(String.format(
 				mContext.getString(R.string.wifi_tether_enabled_subtext),
 				(wifiConfig == null) ? s : wifiConfig.SSID));
 	}
 
-	private void updateTetherState(Object[] available, Object[] tethered,
-			Object[] errored) {
+	private void updateTetherState(final Object[] available, final Object[] tethered,
+			final Object[] errored) {
 		boolean wifiTethered = false;
 		boolean wifiErrored = false;
 
-		for (Object o : tethered) {
-			String s = (String) o;
-			for (String regex : mWifiRegexs) {
-				if (s.matches(regex))
+		for (final Object o : tethered) {
+			final String s = (String) o;
+			for (final String regex : mWifiRegexs) {
+				if (s.matches(regex)) {
 					wifiTethered = true;
+				}
 			}
 		}
-		for (Object o : errored) {
-			String s = (String) o;
-			for (String regex : mWifiRegexs) {
-				if (s.matches(regex))
+		for (final Object o : errored) {
+			final String s = (String) o;
+			for (final String regex : mWifiRegexs) {
+				if (s.matches(regex)) {
 					wifiErrored = true;
+				}
 			}
 		}
 
 		if (wifiTethered) {
-			WifiConfiguration wifiConfig = getWifiApConfiguration(mWifiManager);
+			final WifiConfiguration wifiConfig = getWifiApConfiguration(mWifiManager);
 			updateConfigSummary(wifiConfig);
 		} else if (wifiErrored) {
 			mCheckBox.setSummary(R.string.wifi_error);
 		}
 	}
 
-	private boolean setWifiApEnabled(WifiManager wifiManager,
-			WifiConfiguration wifiConfig, boolean enabled) {
-		Log.d("test", "WifiConfiguration = " + wifiConfig);
+	private boolean setWifiApEnabled(final WifiManager wifiManager,
+			final WifiConfiguration wifiConfig, final boolean enabled) {
+		Log.d(TAG, "WifiConfiguration = " + wifiConfig);
 		try {
-			Method method = wifiManager.getClass().getMethod(
+			final Method method = wifiManager.getClass().getMethod(
 					"setWifiApEnabled", WifiConfiguration.class, boolean.class);
 			return (Boolean) method.invoke(wifiManager, wifiConfig, enabled);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private WifiConfiguration getWifiApConfiguration(WifiManager wifiManager) {
+	private WifiConfiguration getWifiApConfiguration(final WifiManager wifiManager) {
 		try {
-			Method method = wifiManager.getClass().getMethod(
+			final Method method = wifiManager.getClass().getMethod(
 					"getWifiApConfiguration");
 			return (WifiConfiguration) method.invoke(wifiManager);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private void handleWifiApStateChanged(int state) {
+	private void handleWifiApStateChanged(final int state) {
+		Log.d(TAG, "handleWifiApStateChanged:state = " + state);
+
 		switch (state) {
 		// case WifiManager.WIFI_AP_STATE_ENABLING:
 		case 12:
-			mCheckBox.setEnabled(false);
+			// mCheckBox.setEnabled(false);
+			showDialog();
 			break;
 		// case WifiManager.WIFI_AP_STATE_ENABLED:
 		case 13:
@@ -265,17 +275,20 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 			 */
 			mCheckBox.setChecked(true);
 			/* Doesnt need the airplane check */
-			mCheckBox.setEnabled(true);
+			// mCheckBox.setEnabled(true);
+			hideDialog();
 			break;
 		// case WifiManager.WIFI_AP_STATE_DISABLING:
 		case 10:
-			mCheckBox.setEnabled(false);
+			// mCheckBox.setEnabled(false);
+			showDialog();
 			break;
 		// case WifiManager.WIFI_AP_STATE_DISABLED:
 		case 11:
 			mCheckBox.setChecked(false);
 			mCheckBox.setSummary(mOriginalSummary);
 			enableWifiCheckBox();
+			hideDialog();
 			break;
 		default:
 			mCheckBox.setChecked(false);
@@ -284,13 +297,13 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 		setNotification();
 	}
 
-	public void setNotification(String notificationSetting) {
+	public void setNotification(final String notificationSetting) {
 		boolean showNotification = false;
 		Log.d(TAG, "notificationSetting = " + notificationSetting);
 		if ("1".equals(notificationSetting)) {
 			showNotification = true;
 		} else if ("2".equals(notificationSetting)) {
-			CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) ((PreferenceActivity) mContext)
+			final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) ((PreferenceActivity) mContext)
 					.findPreference(TetherSetting.ENABLE_WIFI_AP);
 			if (mEnableWifiAp.isEnabled() && mEnableWifiAp.isChecked()) {
 				showNotification = true;
@@ -307,9 +320,25 @@ public class WifiApEnabler implements Preference.OnPreferenceChangeListener {
 	}
 
 	public void setNotification() {
-		PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
-		String notificationSetting = preferenceUtil
+		final PreferenceUtil preferenceUtil = new PreferenceUtil(mContext);
+		final String notificationSetting = preferenceUtil
 				.getString(TetherSetting.NOTIFICATION_SETTING);
 		setNotification(notificationSetting);
+	}
+
+	private void showDialog() {
+		if (mDialog.isShowing()) {
+			return;
+		}
+		mDialog.setMessage(mContext.getString(R.string.dialog_progressing));
+		mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		mDialog.show();
+	}
+
+	private void hideDialog() {
+		if (!mDialog.isShowing()) {
+			return;
+		}
+		mDialog.dismiss();
 	}
 }
