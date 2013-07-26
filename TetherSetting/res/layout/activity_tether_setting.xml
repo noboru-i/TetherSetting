@@ -33,4 +33,7 @@
         android:summary="@string/summary_notification_setting"
         android:title="@string/title_notification_setting" />
 
+    <Preference
+        android:title="@string/title_force_execution"
+        android:key="forced_execution" />
 </PreferenceScreen>

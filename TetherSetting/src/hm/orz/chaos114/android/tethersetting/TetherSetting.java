@@ -4,7 +4,9 @@ import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
 
 import java.lang.reflect.Method;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
@@ -23,7 +26,7 @@ public class TetherSetting extends PreferenceActivity implements
 	public static final String WIFI_AP_SSID = "wifi_ap_ssid";
 	public static final String WIFI_AP_SECURITY = "wifi_ap_security";
 	public static final String ENABLE_WIFI_AP = "enable_wifi_ap";
-	
+
 	public static final String NOTIFICATION_SETTING = "notification_setting";
 
 	private WifiApEnabler mWifiApEnabler;
@@ -31,15 +34,47 @@ public class TetherSetting extends PreferenceActivity implements
 	private EditTextPreference mSecurity;
 	private ListPreference mNotificationSetting;
 
+	/** 強制実行処理リスナー */
+	OnPreferenceClickListener mForceExecutionListener = new OnPreferenceClickListener() {
+		@Override
+		public boolean onPreferenceClick(final Preference preference) {
+			new AlertDialog.Builder(TetherSetting.this)
+					.setTitle(R.string.dialog_force_execution_title)
+					.setPositiveButton(R.string.dialog_force_on_button,
+							mForceOnListener)
+					.setNegativeButton(R.string.dialog_force_off_button,
+							mForceOffListener)
+					.setNeutralButton(android.R.string.cancel, null)
+					.show();
+			return false;
+		}
+	};
+
+	/** 強制実行ON */
+	DialogInterface.OnClickListener mForceOnListener = new DialogInterface.OnClickListener() {
+		@Override
+		public void onClick(final DialogInterface dialog, final int which) {
+			mWifiApEnabler.onPreferenceChange(null, true);
+		}
+	};
+
+	/** 強制実行OFF */
+	DialogInterface.OnClickListener mForceOffListener = new DialogInterface.OnClickListener() {
+		@Override
+		public void onClick(final DialogInterface dialog, final int which) {
+			mWifiApEnabler.onPreferenceChange(null, false);
+		}
+	};
+
 	@SuppressWarnings("deprecation")
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BugSenseHandler.initAndStartSession(getApplication(),
 				getString(R.string.bug_sense_api_key));
 		addPreferencesFromResource(R.layout.activity_tether_setting);
 
-		CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
+		final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
 		mSsid = (EditTextPreference) findPreference(WIFI_AP_SSID);
 		mSecurity = (EditTextPreference) findPreference(WIFI_AP_SECURITY);
 		mNotificationSetting = (ListPreference) findPreference(NOTIFICATION_SETTING);
@@ -49,6 +84,9 @@ public class TetherSetting extends PreferenceActivity implements
 		mSecurity.setOnPreferenceChangeListener(this);
 		mNotificationSetting.setOnPreferenceChangeListener(this);
 		setSummary();
+
+		final Preference forcedExecution = findPreference("forced_execution");
+		forcedExecution.setOnPreferenceClickListener(mForceExecutionListener);
 	}
 
 	@Override
@@ -64,21 +102,22 @@ public class TetherSetting extends PreferenceActivity implements
 	}
 
 	public WifiConfiguration getWifiConfiguration() {
-		WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		final WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		try {
-			Method method = manager.getClass().getMethod(
+			final Method method = manager.getClass().getMethod(
 					"getWifiApConfiguration");
-			WifiConfiguration configuration = (WifiConfiguration) method
+			final WifiConfiguration configuration = (WifiConfiguration) method
 					.invoke(manager, (Object[]) null);
 			return configuration;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	public boolean onPreferenceChange(Preference preference, Object newValue) {
-		String value = (String) newValue;
+	public boolean onPreferenceChange(final Preference preference,
+			final Object newValue) {
+		final String value = (String) newValue;
 		String prefix = "";
 		if (WIFI_AP_SSID.equals(preference.getKey())) {
 			prefix = "SSID:";
@@ -96,7 +135,7 @@ public class TetherSetting extends PreferenceActivity implements
 			}
 			prefix = "password:";
 		} else if (NOTIFICATION_SETTING.equals(preference.getKey())) {
-			mWifiApEnabler.setNotification((String)newValue);
+			mWifiApEnabler.setNotification((String) newValue);
 			return true;
 		}
 		preference.setSummary(prefix + value);
@@ -104,9 +143,10 @@ public class TetherSetting extends PreferenceActivity implements
 	}
 
 	private void setSummary() {
-		PreferenceUtil preferenceUtil = new PreferenceUtil(this);
-		String ssid = preferenceUtil.getString(TetherSetting.WIFI_AP_SSID);
-		String security = preferenceUtil
+		final PreferenceUtil preferenceUtil = new PreferenceUtil(this);
+		final String ssid = preferenceUtil
+				.getString(TetherSetting.WIFI_AP_SSID);
+		final String security = preferenceUtil
 				.getString(TetherSetting.WIFI_AP_SECURITY);
 		mSsid.setSummary("SSID:" + ssid);
 		mSecurity.setSummary("password:" + security);

@@ -7,6 +7,7 @@
     <string name="title_input_password">password</string>
     <string name="summary_notification_setting">Choose when show notification</string>
     <string name="notification_message">Select to change your setting</string>
+    <string name="title_force_execution">Forced execution</string>
     
     <string name="wifi_error">Error</string>
     <string name="wifi_tether_configure_ssid_default">AndroidHotspot</string>
@@ -17,4 +18,7 @@
     <string name="toast_validation_error_password">Input empty or 8–63 characters.</string>
 
     <string name="dialog_progressing">Progressing.</string>
+    <string name="dialog_force_execution_title">Select operation</string>
+    <string name="dialog_force_on_button">Force On</string>
+    <string name="dialog_force_off_button">Force Off</string>
 </resources>
