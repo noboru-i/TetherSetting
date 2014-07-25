@@ -1,9 +1,5 @@
 package hm.orz.chaos114.android.tethersetting;
 
-import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
-
-import java.lang.reflect.Method;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,6 +16,10 @@ import android.widget.Toast;
 
 import com.bugsense.trace.BugSenseHandler;
 import com.google.analytics.tracking.android.EasyTracker;
+
+import java.lang.reflect.Method;
+
+import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
 
 public class TetherSetting extends PreferenceActivity implements
 		Preference.OnPreferenceChangeListener {

@@ -1,2 +1,6 @@
 /gen
 /bin
+
+/.gradle
+/build
+/.idea
