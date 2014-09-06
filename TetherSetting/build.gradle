@@ -23,7 +23,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:19.+'
 
     // AdMob
-    compile 'com.google.android.gms:play-services:5.+'
+    compile 'com.google.android.gms:play-services:5.0.+'
     // crashlytics
     compile 'com.crashlytics.android:crashlytics:1.+'
 }
