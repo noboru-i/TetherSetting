@@ -1,17 +1,21 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven { url 'http://download.crashlytics.com/maven' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
     }
 }
 apply plugin: 'com.android.application'
+apply plugin: 'crashlytics'
 
 repositories {
     maven {
         url "http://www.bugsense.com/gradle/"
     }
+    maven { url 'http://download.crashlytics.com/maven' }
 }
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
@@ -19,21 +23,21 @@ dependencies {
     compile 'com.android.support:appcompat-v7:19.+'
 
     // AdMob
-    compile 'com.google.android.gms:play-services:5.0.77'
-    // bugsense
-    compile "com.bugsense.trace:bugsense:3.6.1"
+    compile 'com.google.android.gms:play-services:5.+'
+    // crashlytics
+    compile 'com.crashlytics.android:crashlytics:1.+'
 }
 
 android {
-    compileSdkVersion 15
+    compileSdkVersion 20
     buildToolsVersion "20.0.0"
 
     defaultConfig {
         applicationId "hm.orz.chaos114.android.tethersetting"
         minSdkVersion 9
-        targetSdkVersion 18
-        versionCode 5
-        versionName "2.0.0"
+        targetSdkVersion 20
+        versionCode 6
+        versionName "2.1.0"
     }
     sourceSets {
         main {

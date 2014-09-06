@@ -14,7 +14,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
-import com.bugsense.trace.BugSenseHandler;
+import com.crashlytics.android.Crashlytics;
 import com.google.analytics.tracking.android.EasyTracker;
 
 import java.lang.reflect.Method;
@@ -71,8 +71,7 @@ public class TetherSetting extends PreferenceActivity implements
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		BugSenseHandler.initAndStartSession(getApplication(),
-				getString(R.string.bug_sense_api_key));
+		Crashlytics.start(this);
 		addPreferencesFromResource(R.layout.activity_tether_setting);
 
 		final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
