@@ -36,8 +36,8 @@ android {
         applicationId "hm.orz.chaos114.android.tethersetting"
         minSdkVersion 9
         targetSdkVersion 20
-        versionCode 6
-        versionName "2.1.0"
+        versionCode 7
+        versionName "2.2.0"
     }
     sourceSets {
         main {
