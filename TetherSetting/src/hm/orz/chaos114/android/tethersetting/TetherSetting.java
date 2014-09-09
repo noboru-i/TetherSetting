@@ -16,151 +16,179 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 
 import java.lang.reflect.Method;
 
 import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
 
 public class TetherSetting extends PreferenceActivity implements
-		Preference.OnPreferenceChangeListener {
+        Preference.OnPreferenceChangeListener {
 
-	public static final String WIFI_AP_SSID = "wifi_ap_ssid";
-	public static final String WIFI_AP_SECURITY = "wifi_ap_security";
-	public static final String ENABLE_WIFI_AP = "enable_wifi_ap";
+    public static final String WIFI_AP_SSID = "wifi_ap_ssid";
+    public static final String WIFI_AP_SECURITY = "wifi_ap_security";
+    public static final String ENABLE_WIFI_AP = "enable_wifi_ap";
 
-	public static final String NOTIFICATION_SETTING = "notification_setting";
+    public static final String NOTIFICATION_SETTING = "notification_setting";
 
-	private WifiApEnabler mWifiApEnabler;
-	private EditTextPreference mSsid;
-	private EditTextPreference mSecurity;
-	private ListPreference mNotificationSetting;
+    private WifiApEnabler mWifiApEnabler;
+    private EditTextPreference mSsid;
+    private EditTextPreference mSecurity;
+    private ListPreference mNotificationSetting;
 
-	/** 強制実行処理リスナー */
-	OnPreferenceClickListener mForceExecutionListener = new OnPreferenceClickListener() {
-		@Override
-		public boolean onPreferenceClick(final Preference preference) {
-			new AlertDialog.Builder(TetherSetting.this)
-					.setTitle(R.string.dialog_force_execution_title)
-					.setPositiveButton(R.string.dialog_force_on_button,
-							mForceOnListener)
-					.setNegativeButton(R.string.dialog_force_off_button,
-							mForceOffListener)
-					.setNeutralButton(android.R.string.cancel, null)
-					.show();
-			return false;
-		}
-	};
+    private InterstitialAd interstitial;
 
-	/** 強制実行ON */
-	DialogInterface.OnClickListener mForceOnListener = new DialogInterface.OnClickListener() {
-		@Override
-		public void onClick(final DialogInterface dialog, final int which) {
-			mWifiApEnabler.onPreferenceChange(null, true);
-		}
-	};
+    /** 強制実行処理リスナー */
+    OnPreferenceClickListener mForceExecutionListener = new OnPreferenceClickListener() {
+        @Override
+        public boolean onPreferenceClick(final Preference preference) {
+            new AlertDialog.Builder(TetherSetting.this)
+                    .setTitle(R.string.dialog_force_execution_title)
+                    .setPositiveButton(R.string.dialog_force_on_button,
+                            mForceOnListener)
+                    .setNegativeButton(R.string.dialog_force_off_button,
+                            mForceOffListener)
+                    .setNeutralButton(android.R.string.cancel, null)
+                    .show();
+            return false;
+        }
+    };
 
-	/** 強制実行OFF */
-	DialogInterface.OnClickListener mForceOffListener = new DialogInterface.OnClickListener() {
-		@Override
-		public void onClick(final DialogInterface dialog, final int which) {
-			mWifiApEnabler.onPreferenceChange(null, false);
-		}
-	};
+    /** 強制実行ON */
+    DialogInterface.OnClickListener mForceOnListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(final DialogInterface dialog, final int which) {
+            mWifiApEnabler.onPreferenceChange(null, true);
+        }
+    };
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		Crashlytics.start(this);
-		addPreferencesFromResource(R.layout.activity_tether_setting);
+    /** 強制実行OFF */
+    DialogInterface.OnClickListener mForceOffListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(final DialogInterface dialog, final int which) {
+            mWifiApEnabler.onPreferenceChange(null, false);
+        }
+    };
 
-		final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
-		mSsid = (EditTextPreference) findPreference(WIFI_AP_SSID);
-		mSecurity = (EditTextPreference) findPreference(WIFI_AP_SECURITY);
-		mNotificationSetting = (ListPreference) findPreference(NOTIFICATION_SETTING);
-		mWifiApEnabler = new WifiApEnabler(this, mEnableWifiAp);
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Crashlytics.start(this);
+        addPreferencesFromResource(R.layout.activity_tether_setting);
 
-		mSsid.setOnPreferenceChangeListener(this);
-		mSecurity.setOnPreferenceChangeListener(this);
-		mNotificationSetting.setOnPreferenceChangeListener(this);
-		setSummary();
+        final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
+        mSsid = (EditTextPreference) findPreference(WIFI_AP_SSID);
+        mSecurity = (EditTextPreference) findPreference(WIFI_AP_SECURITY);
+        mNotificationSetting = (ListPreference) findPreference(NOTIFICATION_SETTING);
+        mWifiApEnabler = new WifiApEnabler(this, mEnableWifiAp);
 
-		final Preference forcedExecution = findPreference("forced_execution");
-		forcedExecution.setOnPreferenceClickListener(mForceExecutionListener);
-	}
+        mSsid.setOnPreferenceChangeListener(this);
+        mSecurity.setOnPreferenceChangeListener(this);
+        mNotificationSetting.setOnPreferenceChangeListener(this);
+        setSummary();
 
-	@Override
-	protected void onStart() {
-		super.onStart();
-		EasyTracker.getInstance().activityStart(this);
-	}
+        final Preference forcedExecution = findPreference("forced_execution");
+        forcedExecution.setOnPreferenceClickListener(mForceExecutionListener);
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mWifiApEnabler.resume();
-	}
+        // インタースティシャルを作成する。
+        interstitial = new InterstitialAd(this);
+        interstitial.setAdUnitId(getString(R.string.unit_id));
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mWifiApEnabler.pause();
-	}
+        // 広告リクエストを作成する。
+        AdRequest adRequest = new AdRequest.Builder().build();
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-		EasyTracker.getInstance().activityStop(this);
-	}
+        // インタースティシャルの読み込みを開始する。
+        interstitial.loadAd(adRequest);
+    }
 
-	public WifiConfiguration getWifiConfiguration() {
-		final WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		try {
-			final Method method = manager.getClass().getMethod(
-					"getWifiApConfiguration");
-			final WifiConfiguration configuration = (WifiConfiguration) method
-					.invoke(manager, (Object[]) null);
-			return configuration;
-		} catch (final Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EasyTracker.getInstance().activityStart(this);
+    }
 
-	@Override
-	public boolean onPreferenceChange(final Preference preference,
-			final Object newValue) {
-		final String value = (String) newValue;
-		String prefix = "";
-		if (WIFI_AP_SSID.equals(preference.getKey())) {
-			prefix = "SSID:";
-			if (value.length() == 0) {
-				return false;
-			}
-		} else if (WIFI_AP_SECURITY.equals(preference.getKey())) {
-			if (value.length() != 0
-					&& (value.length() < 8 || value.length() > 63)) {
-				// 8文字未満 or 63文字を超える場合
-				Toast.makeText(this,
-						getString(R.string.toast_validation_error_password),
-						Toast.LENGTH_LONG).show();
-				return false;
-			}
-			prefix = "password:";
-		} else if (NOTIFICATION_SETTING.equals(preference.getKey())) {
-			mWifiApEnabler.setNotification((String) newValue);
-			return true;
-		}
-		preference.setSummary(prefix + value);
-		return true;
-	}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mWifiApEnabler.resume();
+        displayInterstitial();
+    }
 
-	private void setSummary() {
-		final PreferenceUtil preferenceUtil = new PreferenceUtil(this);
-		final String ssid = preferenceUtil
-				.getString(TetherSetting.WIFI_AP_SSID);
-		final String security = preferenceUtil
-				.getString(TetherSetting.WIFI_AP_SECURITY);
-		mSsid.setSummary("SSID:" + ssid);
-		mSecurity.setSummary("password:" + security);
-	}
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mWifiApEnabler.pause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EasyTracker.getInstance().activityStop(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        displayInterstitial();
+        super.onBackPressed();
+    }
+
+    public WifiConfiguration getWifiConfiguration() {
+        final WifiManager manager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        try {
+            final Method method = manager.getClass().getMethod(
+                    "getWifiApConfiguration");
+            final WifiConfiguration configuration = (WifiConfiguration) method
+                    .invoke(manager, (Object[]) null);
+            return configuration;
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean onPreferenceChange(final Preference preference,
+                                      final Object newValue) {
+        final String value = (String) newValue;
+        String prefix = "";
+        if (WIFI_AP_SSID.equals(preference.getKey())) {
+            prefix = "SSID:";
+            if (value.length() == 0) {
+                return false;
+            }
+        } else if (WIFI_AP_SECURITY.equals(preference.getKey())) {
+            if (value.length() != 0
+                    && (value.length() < 8 || value.length() > 63)) {
+                // 8文字未満 or 63文字を超える場合
+                Toast.makeText(this,
+                        getString(R.string.toast_validation_error_password),
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+            prefix = "password:";
+        } else if (NOTIFICATION_SETTING.equals(preference.getKey())) {
+            mWifiApEnabler.setNotification((String) newValue);
+            return true;
+        }
+        preference.setSummary(prefix + value);
+        return true;
+    }
+
+    private void setSummary() {
+        final PreferenceUtil preferenceUtil = new PreferenceUtil(this);
+        final String ssid = preferenceUtil
+                .getString(TetherSetting.WIFI_AP_SSID);
+        final String security = preferenceUtil
+                .getString(TetherSetting.WIFI_AP_SECURITY);
+        mSsid.setSummary("SSID:" + ssid);
+        mSecurity.setSummary("password:" + security);
+    }
+
+    // インタースティシャルを表示する準備ができたら、displayInterstitial() を呼び出す。
+    public void displayInterstitial() {
+        if (interstitial.isLoaded()) {
+            interstitial.show();
+        }
+    }
 }
