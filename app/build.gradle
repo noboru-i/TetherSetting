@@ -25,8 +25,8 @@ android {
         applicationId "hm.orz.chaos114.android.tethersetting"
         minSdkVersion 9
         targetSdkVersion 22
-        versionCode 8
-        versionName "2.2.1"
+        versionCode 9
+        versionName "2.2.2"
     }
     signingConfigs {
         debug {
