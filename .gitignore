@@ -1,4 +1,6 @@
 fabric.properties
+gradle.properties
+/app/keystore
 
 ### https://raw.github.com/github/gitignore/8bc0e535bbc450e329cc8714da5c74855e3e98ea/Android.gitignore
 
