@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+           tools:ignore="TypographyDashes">
+    <integer name="ga_sessionTimeout">300</integer>
+
+    <bool name="ga_autoActivityTracking">true</bool>
+
+    <screenName name="hm.orz.chaos114.android.tethersetting.TetherSetting">
+        TetherSetting ScreenView
+    </screenName>
+    <string name="ga_trackingId">UA-42750443-1</string>
+</resources>

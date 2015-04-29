@@ -15,10 +15,12 @@ import android.preference.PreferenceActivity;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.analytics.tracking.android.EasyTracker;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
+import io.fabric.sdk.android.Fabric;
 import java.lang.reflect.Method;
 
 import hm.orz.chaos114.android.tethersetting.util.PreferenceUtil;
@@ -43,6 +45,11 @@ public class TetherSetting extends PreferenceActivity implements
     OnPreferenceClickListener mForceExecutionListener = new OnPreferenceClickListener() {
         @Override
         public boolean onPreferenceClick(final Preference preference) {
+            Tracker t = ((App)getApplication()).getTracker();
+            t.send(new HitBuilders.EventBuilder()
+                    .setCategory("Setting")
+                    .setAction("Open")
+                    .setLabel(preference.getKey()).build());
             new AlertDialog.Builder(TetherSetting.this)
                     .setTitle(R.string.dialog_force_execution_title)
                     .setPositiveButton(R.string.dialog_force_on_button,
@@ -59,6 +66,11 @@ public class TetherSetting extends PreferenceActivity implements
     DialogInterface.OnClickListener mForceOnListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(final DialogInterface dialog, final int which) {
+            Tracker t = ((App)getApplication()).getTracker();
+            t.send(new HitBuilders.EventBuilder()
+                    .setCategory("Setting")
+                    .setAction("Exec")
+                    .setLabel("ForceOn").build());
             mWifiApEnabler.onPreferenceChange(null, true);
         }
     };
@@ -67,6 +79,11 @@ public class TetherSetting extends PreferenceActivity implements
     DialogInterface.OnClickListener mForceOffListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(final DialogInterface dialog, final int which) {
+            Tracker t = ((App)getApplication()).getTracker();
+            t.send(new HitBuilders.EventBuilder()
+                    .setCategory("Setting")
+                    .setAction("Open")
+                    .setLabel("ForceOff").build());
             mWifiApEnabler.onPreferenceChange(null, false);
         }
     };
@@ -75,7 +92,7 @@ public class TetherSetting extends PreferenceActivity implements
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Crashlytics.start(this);
+        Fabric.with(this, new Crashlytics());
         addPreferencesFromResource(R.layout.activity_tether_setting);
 
         final CheckBoxPreference mEnableWifiAp = (CheckBoxPreference) findPreference(ENABLE_WIFI_AP);
@@ -104,28 +121,20 @@ public class TetherSetting extends PreferenceActivity implements
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        EasyTracker.getInstance().activityStart(this);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         mWifiApEnabler.resume();
         displayInterstitial();
+
+        Tracker t = ((App)getApplication()).getTracker();
+        t.setScreenName("/TetherSetting");
+        t.send(new HitBuilders.AppViewBuilder().build());
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mWifiApEnabler.pause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        EasyTracker.getInstance().activityStop(this);
     }
 
     @Override
@@ -150,6 +159,11 @@ public class TetherSetting extends PreferenceActivity implements
     @Override
     public boolean onPreferenceChange(final Preference preference,
                                       final Object newValue) {
+        Tracker t = ((App)getApplication()).getTracker();
+        t.send(new HitBuilders.EventBuilder()
+                .setCategory("Setting")
+                .setAction("Change")
+                .setLabel(preference.getKey()).build());
         final String value = (String) newValue;
         String prefix = "";
         if (WIFI_AP_SSID.equals(preference.getKey())) {
